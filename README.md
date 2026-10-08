@@ -30,7 +30,7 @@ Full usage notes (in Italian): [`scaling-tool/README.md`](scaling-tool/README.md
 
 ### Credits
 
-Developed by **Luca Mandolesi**, founding partner and head of the ICT and VIARCH sector, graduated in medieval archaeology at the University of Siena. Since 2005 he leads the open-source project [pyArchInit](https://github.com/pyarchinit/pyarchinit), a QGIS plugin for the GIS management of excavation data, and since 2015 he works on GNSS, Structure from Motion, QGIS and 3D (Blender, BlenderGIS) workflows. Member of GFOSS.it and ArcheoFOSS.
+**Designed by Luca Mandolesi and developed with [Claude Code](https://claude.com/claude-code) (Anthropic).** Luca Mandolesi is a founding partner and head of the ICT and VIARCH sector, graduated in medieval archaeology at the University of Siena. Since 2005 he leads the open-source project [pyArchInit](https://github.com/pyarchinit/pyarchinit), a QGIS plugin for the GIS management of excavation data, and since 2015 he works on GNSS, Structure from Motion, QGIS and 3D (Blender, BlenderGIS) workflows. Member of GFOSS.it and ArcheoFOSS.
 
 Developed by [flyover Academy](https://flyoveracademy.it/).
 
@@ -62,6 +62,6 @@ Istruzioni d'uso complete: [`scaling-tool/README.md`](scaling-tool/README.md).
 
 ### Autori
 
-Sviluppato da **Luca Mandolesi**, socio fondatore e direttore del settore ICT e VIARCH, laureato in archeologia medievale all'Università di Siena. Dal 2005 è responsabile del progetto open source [pyArchInit](https://github.com/pyarchinit/pyarchinit), un plugin QGIS per la gestione GIS dei dati di scavo; dal 2015 si occupa di flussi di lavoro per rilievo GNSS, Structure From Motion, QGIS e mondo 3D con Blender e BlenderGIS. Socio di GFOSS.it e ArcheoFOSS.
+**Progettato da Luca Mandolesi e sviluppato con [Claude Code](https://claude.com/claude-code) (Anthropic).** Luca Mandolesi è socio fondatore e direttore del settore ICT e VIARCH, laureato in archeologia medievale all'Università di Siena. Dal 2005 è responsabile del progetto open source [pyArchInit](https://github.com/pyarchinit/pyarchinit), un plugin QGIS per la gestione GIS dei dati di scavo; dal 2015 si occupa di flussi di lavoro per rilievo GNSS, Structure From Motion, QGIS e mondo 3D con Blender e BlenderGIS. Socio di GFOSS.it e ArcheoFOSS.
 
 Sviluppato da [flyover Academy](https://flyoveracademy.it/).

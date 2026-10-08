@@ -92,7 +92,7 @@ Rimozione: disabilita o elimina dalla stessa pagina. In emergenza:
 
 ## Autore e licenza
 
-Plugin di **Luca Mandolesi** (mandoluca@gmail.com), copyright 2026.
+Plugin di **Luca Mandolesi** (mandoluca@gmail.com), copyright 2026. Progettato da Luca Mandolesi e sviluppato con [Claude Code](https://claude.com/claude-code) (Anthropic).
 Sviluppato da [flyover Academy](https://flyoveracademy.it/).
 
 **Luca Mandolesi** - socio fondatore e direttore del settore ICT e VIARCH. Laureato in archeologia medievale all'Università di Siena, si occupa di scavi archeologici, ricognizioni, musealizzazioni e pubblicazioni, con particolare attenzione allo sviluppo di soluzioni informatiche free e open source. Dal 2005 è responsabile del progetto open source [pyArchInit](https://github.com/pyarchinit/pyarchinit), un plugin QGIS per la gestione GIS dei dati di scavo, e ha insegnato in vari corsi sull'uso del GIS nella gestione dei dati dei beni culturali e su piattaforme GIS open source. Dal 2015 si occupa anche di soluzioni e flussi di lavoro per rilievo GNSS, Structure From Motion, QGIS e mondo 3D con Blender e BlenderGIS. Socio di GFOSS.it e ArcheoFOSS, è amministratore della pagina QGIS ITALIA su Facebook.
