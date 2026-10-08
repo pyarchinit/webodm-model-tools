@@ -11,7 +11,23 @@ Qui ogni operazione viene quindi ritentata per un breve periodo. Solo libreria s
 """
 import json
 import os
+import re
 import time
+
+_WIN_PATH = re.compile(r'''[A-Za-z]:[\\/](?:[^\\/\s"'<>|:*?]+[\\/])*([^\\/\s"'<>|:*?]*)''')
+_POSIX_PATH = re.compile(r'''(?<![\w.:/])/(?:[^/\s"']+/)+([^/\s"']*)''')
+
+
+def scrub(text, roots=()):
+    """Toglie da un messaggio destinato al pannello i percorsi del server: lo legge chiunque veda il
+    task, e dove sta WebODM sul disco non lo riguarda. Le cartelle `roots` (anche con spazi) spariscono,
+    degli altri percorsi assoluti resta il solo nome del file. Il messaggio completo resta nei log."""
+    text = '%s' % (text,)
+    roots = (os.path.normpath(r) for r in roots if r)
+    for root in sorted((r for r in roots if len(r) > 3), key=len, reverse=True):    # mai '/' o 'C:\'
+        for variant in set((root, root.replace('\\', '/'), root.replace('\\', '\\\\'))):
+            text = re.sub(re.escape(variant) + r'[\\/]*', '', text, flags=re.I)
+    return _POSIX_PATH.sub(r'\1', _WIN_PATH.sub(r'\1', text))
 
 
 def _retry(action, patience, errors):

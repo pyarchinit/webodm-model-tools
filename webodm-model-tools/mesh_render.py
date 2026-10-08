@@ -21,11 +21,22 @@ GRID_MAX = 64                # oltre questo lato (in pixel) il triangolo si rast
 BATCH = 2000000              # frammenti candidati per blocco
 EPS = 1e-4                   # tolleranza baricentrica: niente fessure tra triangoli vicini
 GREY = (190, 190, 190)       # faccia senza texture
+TEX_MAX_PIXELS = 300000000   # una texture piu' grande (file importato fatto apposta) esaurirebbe la memoria: resta grigia
 
 
 def _int(tok, count):
     i = int(tok)
     return i - 1 if i > 0 else count + i
+
+
+def _inside(folder, name):
+    """Percorso di `name` (scritto in un OBJ/MTL) se sta dentro `folder`, altrimenti None:
+    un file importato puo' contenere percorsi assoluti o con '..' per leggere altri file del server."""
+    if not name:
+        return None
+    full = os.path.realpath(os.path.join(folder, name))
+    root = os.path.realpath(folder)
+    return full if full.startswith(root + os.sep) else None
 
 
 def load_obj(path):
@@ -59,8 +70,8 @@ def load_obj(path):
     folder = os.path.dirname(path)
     files = {}                                              # indice materiale -> percorso texture
     for lib in mtllibs:
-        mp = os.path.join(folder, lib)
-        if not os.path.isfile(mp):
+        mp = _inside(folder, lib)
+        if not mp or not os.path.isfile(mp):
             continue
         name = None
         with open(mp, 'r', errors='replace') as f:
@@ -70,7 +81,9 @@ def load_obj(path):
                     name = low.split(None, 1)[1].strip() if len(low.split(None, 1)) > 1 else ''
                 elif low.lower().startswith('map_kd') and name in mats:
                     tex = low.split(None, 1)[1].strip().split()[-1] if len(low.split(None, 1)) > 1 else ''
-                    files[mats[name]] = os.path.join(folder, tex)
+                    tex = _inside(folder, tex)
+                    if tex:
+                        files[mats[name]] = tex
     V = np.array(verts, dtype=np.float64).reshape(-1, 3)
     UV = np.array(uvs, dtype=np.float64).reshape(-1, 2)
     return (V, UV, np.array(fv, dtype=np.int64).reshape(-1, 3), np.array(ft, dtype=np.int64).reshape(-1, 3),
@@ -185,8 +198,12 @@ def render(obj_path, raw_tif, rect, res, status, p0, p1):
         path = tex_files.get(g)
         if path and os.path.isfile(path):
             try:
-                tex = np.asarray(Image.open(path).convert('RGB'))
-            except Exception:
+                with Image.open(path) as im:
+                    if im.size[0] * im.size[1] > TEX_MAX_PIXELS:    # letto dall'intestazione, prima di decodificare
+                        raise ValueError('texture di %d x %d pixel' % im.size)
+                    tex = np.asarray(im.convert('RGB'))
+            except Exception as e:
+                print('texture %s ignorata: %s' % (os.path.basename(path), e), flush=True)
                 tex = None
         for a in range(0, len(ids_all), chunk):
             sel = ids_all[a:a + chunk]

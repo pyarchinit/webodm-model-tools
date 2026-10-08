@@ -6,6 +6,13 @@
 
 ## English
 
+> [!WARNING]
+> **Experimental software, written with an AI: use it with care.**
+> This plugin was designed by Luca Mandolesi and **developed with [Claude Code](https://claude.com/claude-code)** (Anthropic): most of the code was written by an AI model and has not been reviewed line by line by a programmer. It comes with **no warranty** (AGPL).
+> - **Always check the results** (scale, orientation, coordinates, orthophotos) against independent measurements before relying on them.
+> - **Back up important tasks** before using it.
+> - It was tested on the WebODM Windows desktop app with a single user; the security review was also done with Claude Code, not by an independent reviewer. On shared or Internet-facing servers, decide for yourself whether to install it.
+
 A [WebODM](https://github.com/OpenDroneMap/WebODM) plugin to **scale, orient and georeference non-georeferenced models** directly inside the 3D viewer, and to produce measurable products from them.
 
 Photogrammetric models built without ground control have arbitrary scale, axes and origin. This plugin adds a panel to the left menu of the 3D viewer (between *Scene* and *Filters*) where you:
@@ -20,13 +27,13 @@ The interface is available in **Italian, English, German, French, Chinese, Japan
 
 ### Install
 
-`Administration → Plugins → Load Plugin (.zip)` with a zip of the `scaling-tool` folder (the folder must be the first level of the archive), then hard-reload the 3D page. No pip/npm dependencies, no build. It runs on the Windows desktop app and on the Docker image (some features use tools bundled only in the Windows app and fall back to built-in renderers otherwise).
+`Administration → Plugins → Load Plugin (.zip)` with `webodm-model-tools.zip` from the [Releases](https://github.com/pyarchinit/webodm-model-tools/releases) (or a zip of the `webodm-model-tools` folder, which must be the first level of the archive). Up to v1.0.49 the plugin was called `scaling-tool`: disable and delete it first, then hard-reload the 3D page. No pip/npm dependencies, no build. It runs on the Windows desktop app and on the Docker image (some features use tools bundled only in the Windows app and fall back to built-in renderers otherwise).
 
-Full usage notes (in Italian): [`scaling-tool/README.md`](scaling-tool/README.md).
+Full usage notes (in Italian): [`webodm-model-tools/README.md`](webodm-model-tools/README.md). An illustrated guide (in Italian) opens from the **?** button in the panel header.
 
 ### License
 
-[GNU AGPL v3 or later](scaling-tool/LICENSE), the same license as WebODM.
+[GNU AGPL v3 or later](webodm-model-tools/LICENSE), the same license as WebODM.
 
 ### Credits
 
@@ -37,6 +44,13 @@ Developed by [flyover Academy](https://flyoveracademy.it/).
 ---
 
 ## Italiano
+
+> [!WARNING]
+> **Software sperimentale, scritto con un'intelligenza artificiale: usalo con attenzione.**
+> Il plugin è stato progettato da Luca Mandolesi e **sviluppato con [Claude Code](https://claude.com/claude-code)** (Anthropic): il codice è stato in gran parte scritto da un modello di IA e non è stato revisionato riga per riga da un programmatore. È distribuito **senza alcuna garanzia** (AGPL).
+> - **Controlla sempre i risultati** (scala, orientamento, coordinate, ortofoto) con misure indipendenti prima di usarli in un lavoro.
+> - **Fai una copia dei task importanti** prima di usarlo.
+> - È stato provato sull'app WebODM per Windows con un solo utente; la revisione di sicurezza è stata fatta anch'essa con Claude Code, non da un revisore indipendente. Su server condivisi o esposti a Internet valuta tu se installarlo.
 
 Plugin per [WebODM](https://github.com/OpenDroneMap/WebODM) che permette di **scalare, orientare e georiferire modelli non georeferenziati** direttamente nel visualizzatore 3D e di ricavarne prodotti misurabili.
 
@@ -52,13 +66,13 @@ L'interfaccia è disponibile in **italiano, inglese, tedesco, francese, cinese, 
 
 ### Installazione
 
-`Administration → Plugins → Load Plugin (.zip)` con uno zip della cartella `scaling-tool` (la cartella deve essere il primo livello dell'archivio), poi ricarica la pagina 3D con Ctrl+F5. Nessuna dipendenza pip/npm, nessuna build. Funziona sull'app desktop per Windows e sull'immagine Docker (alcune funzioni usano strumenti presenti solo nell'app Windows e altrimenti ripiegano su renderer interni).
+`Administration → Plugins → Load Plugin (.zip)` con `webodm-model-tools.zip` scaricato dalle [Release](https://github.com/pyarchinit/webodm-model-tools/releases) (oppure uno zip della cartella `webodm-model-tools`, che deve essere il primo livello dell'archivio). Fino alla v1.0.49 il plugin si chiamava `scaling-tool`: prima disabilitalo ed eliminalo, poi ricarica la pagina 3D con Ctrl+F5. Nessuna dipendenza pip/npm, nessuna build. Funziona sull'app desktop per Windows e sull'immagine Docker (alcune funzioni usano strumenti presenti solo nell'app Windows e altrimenti ripiegano su renderer interni).
 
-Istruzioni d'uso complete: [`scaling-tool/README.md`](scaling-tool/README.md).
+Istruzioni d'uso complete: [`webodm-model-tools/README.md`](webodm-model-tools/README.md). La guida illustrata si apre dal pulsante **?** nell'intestazione del pannello.
 
 ### Licenza
 
-[GNU AGPL v3 o successiva](scaling-tool/LICENSE), la stessa licenza di WebODM.
+[GNU AGPL v3 o successiva](webodm-model-tools/LICENSE), la stessa licenza di WebODM.
 
 ### Autori
 

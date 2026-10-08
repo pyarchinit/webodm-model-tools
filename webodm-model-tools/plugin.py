@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 
 from rest_framework import status
@@ -27,6 +28,8 @@ logger = logging.getLogger('app.logger')
 
 SUBDIR = 'scaling_tool'          # dentro assets/ del task
 EXPORT_TIMEOUT = 6 * 3600        # un export "running" piu' vecchio di cosi' e' considerato morto
+MAX_JOBS = 4                     # worker contemporanei su tutto il server (cambia con SCALING_TOOL_MAX_JOBS)
+MAX_REFS_BYTES = 200000         # punti di riferimento salvati con la trasformazione: oltre, si scartano
 STALE_AFTER = 120                # ...e uno che non scrive piu' lo stato da tanti secondi pure
 
 
@@ -48,6 +51,13 @@ def can_edit(request, task):
 
 
 read_json = safe_io.read_json
+
+
+def public_text(task, error):
+    """Testo di un errore senza i percorsi del server: lo legge chiunque veda il task (il dettaglio va nei log)."""
+    exe = os.path.dirname(os.path.abspath(sys.executable))
+    return safe_io.scrub(error, (task.assets_path(''), PLUGIN_DIR, tempfile.gettempdir(), os.path.expanduser('~'),
+                                 os.path.dirname(os.path.dirname(exe)), exe))
 
 
 def write_json(path, data):
@@ -78,15 +88,18 @@ class TransformView(TaskView):
         task = self.get_and_check_task(request, pk)
         if not can_edit(request, task):
             return Response({'error': 'Permesso negato'}, status=status.HTTP_403_FORBIDDEN)
+        if not isinstance(request.data, dict):
+            return Response({'error': 'Dati non validi'}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            params = transform_math.sanitize(request.data or {})
+            params = transform_math.sanitize(request.data)
             matrix = transform_math.matrix4(params)
         except (ValueError, TypeError) as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         record = dict(params)
         record['matrix'] = matrix
-        record['refs'] = request.data.get('refs') if isinstance(request.data.get('refs'), dict) else {}
+        refs = request.data.get('refs')
+        record['refs'] = refs if isinstance(refs, dict) and len(json.dumps(refs)) <= MAX_REFS_BYTES else {}
         record['saved_at'] = int(time.time())
         write_json(transform_file(task), record)
         return Response({'transform': record})
@@ -231,16 +244,102 @@ class ExportView(TaskView):
         if export_running(read_json(status_file(task)) or {}):
             return Response({'error': "Export gia' in corso"}, status=status.HTTP_409_CONFLICT)
 
-        if not start_worker(task, 'export_worker.py', [], status_file(task), 'export.log'):
+        started = start_worker(task, 'export_worker.py', [], status_file(task), 'export.log')
+        if started is None:
+            return Response({'error': "Export gia' in corso"}, status=status.HTTP_409_CONFLICT)
+        if started == 'limit':
+            return Response({'error': 'Troppe elaborazioni in corso sul server: riprova tra poco'},
+                            status=status.HTTP_429_TOO_MANY_REQUESTS)
+        if not started:
             return Response({'error': 'Avvio export fallito'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response({'started': True})
 
 
+def max_jobs():
+    try:
+        return max(1, int(os.environ.get('SCALING_TOOL_MAX_JOBS', '')))
+    except ValueError:
+        return MAX_JOBS
+
+
+def claim_job(status_path):
+    """Registra il lavoro di `status_path` tra quelli in corso su tutto il server. False se sono gia'
+    max_jobs(): ogni worker (PDAL, ortofoto da centinaia di megapixel) occupa CPU e GB di memoria, e
+    senza un tetto basterebbe lanciarne uno per task per fermare WebODM.
+    L'elenco e' un file nella cartella temporanea, comune a tutti i processi web; chi ha finito (o e'
+    morto) esce da solo perche' il suo stato non e' piu' "running". In caso di dubbio si lascia partire."""
+    registry = os.path.join(tempfile.gettempdir(), 'scaling-tool-jobs.json')
+    lock = registry + '.lock'
+    deadline = time.time() + 3
+    while True:
+        try:
+            os.close(os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            break
+        except FileExistsError:
+            try:
+                if time.time() - os.path.getmtime(lock) > 30:
+                    os.remove(lock)             # lasciato da un processo morto
+                    continue
+            except OSError:
+                pass
+            if time.time() > deadline:
+                return True
+            time.sleep(0.05)
+        except OSError:
+            return True
+    try:
+        jobs = read_json(registry)
+        jobs = [p for p in (jobs if isinstance(jobs, list) else [])
+                if isinstance(p, str) and p != status_path and export_running(read_json(p) or {})]
+        if len(jobs) >= max_jobs():
+            return False
+        write_json(registry, jobs + [status_path])
+        return True
+    except OSError:
+        return True
+    finally:
+        try:
+            os.remove(lock)
+        except OSError:
+            pass
+
+
 def start_worker(task, script, extra_args, status_path, log_name):
-    """Avvia uno script del plugin in un processo separato. Ritorna False se non parte."""
+    """Avvia uno script del plugin in un processo separato. Ritorna True se parte, False se non riesce,
+    None se ce n'e' gia' uno in corso, 'limit' se il server ne sta gia' eseguendo MAX_JOBS."""
     os.makedirs(work_dir(task), exist_ok=True)
-    write_json(status_path, {'state': 'running', 'pid': None, 'started': time.time(),
-                             'message': 'Avvio...', 'progress': 0, 'files': []})
+    # il controllo "gia' in corso" e la scrittura dello stato devono essere indivisibili, altrimenti
+    # due richieste ravvicinate lanciano due worker sulle stesse cartelle
+    lock = status_path + '.lock'
+    for attempt in (0, 1):
+        try:
+            os.close(os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            break
+        except FileExistsError:
+            try:
+                if attempt == 0 and time.time() - os.path.getmtime(lock) > 60:
+                    os.remove(lock)             # lasciato da un processo morto
+                    continue
+            except OSError:
+                pass
+            return None
+        except OSError as e:
+            logger.warning("scaling-tool: impossibile creare il lock %s: %s" % (lock, e))
+            return False
+    else:
+        return None
+    try:
+        if export_running(read_json(status_path) or {}):
+            return None
+        if not claim_job(status_path):
+            return 'limit'
+        write_json(status_path, {'state': 'running', 'pid': None, 'started': time.time(),
+                                 'message': 'Avvio...', 'progress': 0, 'files': []})
+    finally:
+        try:
+            os.remove(lock)
+        except OSError:
+            pass
     try:
         subprocess.run(
             [sys.executable, '-c', SPAWNER, os.path.join(work_dir(task), log_name),
@@ -249,7 +348,7 @@ def start_worker(task, script, extra_args, status_path, log_name):
             check=True, timeout=30)
     except Exception as e:
         logger.warning("scaling-tool: impossibile avviare %s: %s" % (script, e))
-        write_json(status_path, {'state': 'error', 'message': 'Avvio fallito: %s' % e, 'files': []})
+        write_json(status_path, {'state': 'error', 'message': 'Avvio fallito: %s' % public_text(task, e), 'files': []})
         return False
     return True
 
@@ -266,6 +365,9 @@ def camera_args(data):
             return float(value)
         except (TypeError, ValueError):
             return float('nan')
+
+    if not isinstance(data, dict):
+        raise ValueError('Dati non validi')
 
     def triple(key, limit, what):
         value = data.get(key)
@@ -412,7 +514,13 @@ class OrthoView(TaskView):
         if export_running(read_json(ortho_status_file(task)) or {}):
             return Response({'error': "Ortofoto gia' in elaborazione"}, status=status.HTTP_409_CONFLICT)
 
-        if not start_worker(task, 'ortho_worker.py', args, ortho_status_file(task), 'ortho.log'):
+        started = start_worker(task, 'ortho_worker.py', args, ortho_status_file(task), 'ortho.log')
+        if started is None:
+            return Response({'error': "Ortofoto gia' in elaborazione"}, status=status.HTTP_409_CONFLICT)
+        if started == 'limit':
+            return Response({'error': 'Troppe elaborazioni in corso sul server: riprova tra poco'},
+                            status=status.HTTP_429_TOO_MANY_REQUESTS)
+        if not started:
             return Response({'error': 'Avvio fallito'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response({'started': True})
 
@@ -481,7 +589,7 @@ class MapOrthoView(TaskView):
         task = self.get_and_check_task(request, pk)
         if not can_edit(request, task):
             return Response({'error': 'Permesso negato'}, status=status.HTTP_403_FORBIDDEN)
-        name = request.data.get('name')
+        name = request.data.get('name') if isinstance(request.data, dict) else None
         meta = ortho_meta(task, name)
         if meta is None:
             return Response({'error': 'Ortofoto non trovata'}, status=status.HTTP_404_NOT_FOUND)
@@ -520,7 +628,7 @@ class MapOrthoView(TaskView):
                     register_orthophoto(task, dest)
             except Exception as e2:
                 logger.warning('scaling-tool: ripristino fallito: %s' % e2)
-            return Response({'error': 'Non riuscito: %s' % e}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': 'Non riuscito: %s' % public_text(task, e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         write_json(map_state_file(task), {'name': name, 'published_at': int(time.time())})
         return Response(self.state(task))
@@ -535,7 +643,7 @@ class MapOrthoView(TaskView):
             restore_map_ortho(task)
         except Exception as e:
             logger.warning('scaling-tool: ripristino ortofoto fallito: %s' % e)
-            return Response({'error': 'Ripristino non riuscito: %s' % e},
+            return Response({'error': 'Ripristino non riuscito: %s' % public_text(task, e)},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(self.state(task))
 

@@ -1,4 +1,13 @@
-# Scaling & Orientation Tool (plugin WebODM)
+# WebODM Model Tools - Scaling & Orientation Tool (plugin WebODM)
+
+> [!WARNING]
+> **Software sperimentale, scritto con un'intelligenza artificiale: usalo con attenzione.**
+> Il plugin è stato progettato da Luca Mandolesi e **sviluppato con [Claude Code](https://claude.com/claude-code)** (Anthropic): il codice è stato in gran parte scritto da un modello di IA e non è stato revisionato riga per riga da un programmatore. È distribuito **senza alcuna garanzia** (AGPL).
+> - **Controlla sempre i risultati** (scala, orientamento, coordinate, ortofoto) con misure indipendenti prima di usarli in un lavoro.
+> - **Fai una copia dei task importanti** prima di usarlo.
+> - È stato provato sull'app WebODM per Windows con un solo utente; la revisione di sicurezza è stata fatta anch'essa con Claude Code, non da un revisore indipendente. Su server condivisi o esposti a Internet valuta tu se installarlo.
+
+Guida illustrata: pulsante **?** nell'intestazione del pannello (apre `public/documentazione.html`, inclusa nel plugin).
 
 Nel visualizzatore 3D di un task completato compare il pannello **Scala & Orientamento**.
 Serve per modelli SENZA georeferenziazione (coordinate locali, scala e assi arbitrari).
@@ -81,10 +90,11 @@ L'export gira in un processo separato a bassa priorita'; log in `assets/scaling_
 perpendicolarmente a Z (se non scelta: X originale proiettato); Y = Z x X. Rotazione propria (det = +1).
 
 ## Installazione / rimozione
-Administration -> Plugins -> "Load Plugin (.zip)" -> `scaling-tool.zip`, poi Ctrl+F5 sulla pagina 3D.
+Administration -> Plugins -> "Load Plugin (.zip)" -> `webodm-model-tools.zip`, poi Ctrl+F5 sulla pagina 3D.
 Nessuna dipendenza pip/npm, nessuna build, nessun riavvio.
+Fino alla 1.0.49 il plugin si chiamava `scaling-tool`: se lo hai installato, disabilitalo ed eliminalo prima di caricare questo (i dati salvati nei task restano).
 Rimozione: disabilita o elimina dalla stessa pagina. In emergenza:
-`docker exec webapp rm -rf /webodm/app/media/plugins/scaling-tool` e riavvia WebODM.
+`docker exec webapp rm -rf /webodm/app/media/plugins/webodm-model-tools` e riavvia WebODM.
 
 ## Limiti noti
 - Ortofoto, DSM/DTM e tiles 2D NON vengono trasformati.

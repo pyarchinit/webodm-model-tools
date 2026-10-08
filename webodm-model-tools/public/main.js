@@ -16,8 +16,10 @@
     var m = location.pathname.match(/\/3d\/project\/(\d+)\/task\/([0-9a-fA-F-]+)/);
     if (!m) return;                       // il plugin agisce solo nella vista 3D
     var PROJECT = m[1], TASK = m[2];
-    var API = '/api/plugins/scaling-tool/task/' + TASK;
+    var API = '/api/plugins/webodm-model-tools/task/' + TASK;
     // versione passata dal server nella query dello script (vedi plugin.py: asset_version)
+    // la guida (documentazione.html) sta accanto a questo file, nella cartella public del plugin
+    var DOC_URL = (document.currentScript && document.currentScript.src || '/plugins/webodm-model-tools/main.js').replace(/[^\/]*$/, 'documentazione.html');
     var VERSION = ((document.currentScript && document.currentScript.src || '').match(/[?&]v=(\d+\.\d+\.\d+)/) || [])[1] || 'dev';
 
     // ---------------------------------------------------------------- lingue (vedi i18n.js)
@@ -1394,11 +1396,15 @@
         ta(langSel, 'title', 'Lingua');
         langSel.value = I18N.pref();
         langSel.addEventListener('change', function () { I18N.setLang(langSel.value); });
+        var docLink = h('a', {href: DOC_URL, target: '_blank', rel: 'noopener', style: 'flex:none;margin-left:6px;width:16px;height:16px;line-height:16px;' +
+            'border-radius:50%;background:#fff;color:#2c3e50;text-align:center;text-decoration:none;font-size:11px;cursor:pointer;'}, '?');
+        ta(docLink, 'title', 'Apri la guida');
+        ['click', 'mousedown'].forEach(function (ev) { docLink.addEventListener(ev, function (e) { e.stopPropagation(); }); });
         var titleText = h('span', {style: 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'}, tn('Scala & Orientamento'));
         var title = h('div', {style: 'padding:6px 8px;background:#2c3e50;color:#fff;font-weight:bold;font-size:12px;' +
             'cursor:move;border-radius:6px 6px 0 0;user-select:none;direction:ltr;display:flex;align-items:center;'}, [toggle,
             titleText,
-            langSel, h('span', {style: 'flex:none;font-weight:normal;opacity:.7;'}, 'v' + VERSION)]);
+            langSel, h('span', {style: 'flex:none;font-weight:normal;opacity:.7;'}, 'v' + VERSION), docLink]);
         var body = h('div', {style: 'padding:6px 8px;max-height:75vh;overflow:auto;'});
         var panel = h('div', {id: 'scaling-tool-panel', dir: I18N.dir(), lang: I18N.current(), style: 'position:fixed;top:70px;left:10px;width:280px;z-index:2000;' +
             'background:#fff;color:#111;border:1px solid #555;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.4);' +

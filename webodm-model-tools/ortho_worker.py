@@ -278,14 +278,14 @@ def main():
     import transform_math
     import georef
     from export_worker import (SUBDIR, Status, find_cloud, find_obj, find_tool, link_or_copy,
-                               run_tool, transform_obj)
+                               run_tool, server_roots, transform_obj)
 
     work = os.path.join(args.assets, SUBDIR)
     out = os.path.join(work, 'ortho')
     tmp = os.path.join(work, 'ortho_tmp')
     # ortho.log e' gia' aperto dal processo che ci ha lanciati (stdout): qui un file diverso
     log = os.path.join(work, 'ortho_tools.log')
-    status = Status(os.path.join(work, 'ortho_status.json'))
+    status = Status(os.path.join(work, 'ortho_status.json'), server_roots(args))
     name = None
 
     try:

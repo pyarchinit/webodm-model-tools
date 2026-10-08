@@ -44,9 +44,18 @@ def add_plugin_site_packages(plugin_dir):
             dirs[:] = []
 
 
+def server_roots(args):
+    """Cartelle del server che non devono comparire nei messaggi mostrati nel pannello."""
+    import tempfile
+    exe = os.path.dirname(os.path.abspath(sys.executable))
+    return (args.assets, args.plugin_dir, tempfile.gettempdir(), os.path.expanduser('~'),
+            os.path.dirname(os.path.dirname(exe)), exe)
+
+
 class Status:
-    def __init__(self, path):
+    def __init__(self, path, roots=()):
         self.path = path
+        self.roots = tuple(roots)       # cartelle del server da non mostrare nei messaggi (safe_io.scrub)
         self.state = {'state': 'running', 'pid': os.getpid(), 'started': time.time(),
                       'message': 'Avvio...', 'progress': 0, 'files': []}
         self.flush()
@@ -64,7 +73,8 @@ class Status:
 
     def update(self, message=None, progress=None, **kw):
         if message is not None:
-            self.state['message'] = message
+            import safe_io
+            self.state['message'] = safe_io.scrub(message, self.roots)
         if progress is not None:
             self.state['progress'] = round(progress, 1)
         self.state.update(kw)
@@ -297,7 +307,7 @@ def main():
 
     work = os.path.join(args.assets, SUBDIR)
     out = os.path.join(work, 'out')
-    status = Status(os.path.join(work, 'export_status.json'))
+    status = Status(os.path.join(work, 'export_status.json'), server_roots(args))
 
     try:
         with open(os.path.join(work, 'transform.json'), encoding='utf-8') as f:
