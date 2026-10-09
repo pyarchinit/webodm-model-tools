@@ -802,7 +802,7 @@
         });
         if (S.cam.slice && !S.cam.clipOn) S.cam.slice = false;
         ui.sliceBtn.disabled = !S.cam.clipOn;
-        ui.sliceBtn.textContent = S.cam.slice ? T('✂ Chiudi anteprima della fetta') : T('✂ Anteprima della fetta');
+        ui.sliceBtn.__label.textContent = S.cam.slice ? T('Chiudi anteprima della fetta') : T('Anteprima della fetta');
         ui.sliceBtn.style.background = S.cam.slice ? '#c8e6c9' : '#f4f4f4';
         if (!S.cam.slice && S.sliceVol) removeSlice();
         updateGizmo();
@@ -1062,11 +1062,11 @@
             tb('1:1', T('Dimensione reale: un pixel dell\'immagine = un pixel dello schermo'), function () { zoomCenter(1); }),
             tb(T('Max'), T('Ingrandimento massimo'), function () { zoomCenter(8); }),
             format,
-            tb(T('💾 SALVA…'), T('Scegli cartella e nome del file'), function () { saveOrtho(r, format.value, say); },
+            tb([icon('save'), T('SALVA…')], T('Scegli cartella e nome del file'), function () { saveOrtho(r, format.value, say); },
                 'background:#2e7d32;border-color:#2e7d32;font-weight:bold;'),
             note,
             h('span', {style: 'flex:1;'}),
-            tb(T('✕ Chiudi'), T('Chiudi (Esc)'), closeViewer)
+            tb([icon('close'), T('Chiudi')], T('Chiudi (Esc)'), closeViewer)
         ]);
         var foot = h('div', {style: 'padding:5px 10px;background:#1e1e1e;color:#bbb;font:12px sans-serif;border-top:1px solid #555;'},
             info + '   —   ' + T('trascina per spostare, rotella per lo zoom, doppio clic per adattare'));
@@ -1183,15 +1183,67 @@
         return e;
     }
 
+    // Icone dei pulsanti: un solo tracciato SVG su griglia 24x24, disegnato a tratto nel colore del testo.
+    // docs/build_docs.py legge questa tabella per mostrare nella guida gli stessi pulsanti: una voce per riga.
+    var ICONS = {
+        guide: 'M12 6.5C10.5 5 8 4.5 3 4.5v14c5 0 7.5.5 9 2 1.5-1.5 4-2 9-2v-14c-5 0-7.5.5-9 2zM12 6.5v14',
+        measure: 'M6.5 17.5l11-11M3 19a2 2 0 1 0 4 0a2 2 0 1 0-4 0M17 5a2 2 0 1 0 4 0a2 2 0 1 0-4 0',
+        check: 'M4 12.5l5 5L20 6.5',
+        vertical: 'M12 7v10M10 5a2 2 0 1 0 4 0a2 2 0 1 0-4 0M10 19a2 2 0 1 0 4 0a2 2 0 1 0-4 0',
+        plane: 'M3 18l4-7h14l-4 7zM12 14.5V3M9 6l3-3 3 3',
+        flipZ: 'M8 20V4M4.5 7.5L8 4l3.5 3.5M16 4v16M12.5 16.5L16 20l3.5-3.5',
+        xdir: 'M7 12h13M16.5 8.5L20 12l-3.5 3.5M3 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0',
+        xRight: 'M3 4h18v12H3zM8 10h8M13.5 7.5L16 10l-2.5 2.5M12 16v4M8 20h8',
+        xToward: 'M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12zM9.5 12a2.5 2.5 0 1 0 5 0a2.5 2.5 0 1 0-5 0',
+        flipX: 'M4 8h16M16.5 4.5L20 8l-3.5 3.5M20 16H4M7.5 12.5L4 16l3.5 3.5',
+        origin: 'M7 12a5 5 0 1 0 10 0a5 5 0 1 0-10 0M12 2v5M12 17v5M2 12h5M17 12h5',
+        save: 'M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM8 3v5h7V3M7 21v-7h10v7',
+        export: 'M12 3v12M7.5 10.5L12 15l4.5-4.5M4 17v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3',
+        fit: 'M3 8V4a1 1 0 0 1 1-1h4M16 3h4a1 1 0 0 1 1 1v4M21 16v4a1 1 0 0 1-1 1h-4M8 21H4a1 1 0 0 1-1-1v-4M9 9h6v6H9z',
+        reset: 'M3 4v6h6M4.5 15a8 8 0 1 0 1.6-8.2L3 10',
+        pin: 'M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11zM9.7 10a2.3 2.3 0 1 0 4.6 0a2.3 2.3 0 1 0-4.6 0',
+        globe: 'M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M3 12h18M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.5-3.8-9S9.5 5.5 12 3z',
+        frame: 'M3 5h18v14H3zM7.5 12h9M10 9.5L7.5 12l2.5 2.5M14 9.5l2.5 2.5-2.5 2.5',
+        camera: 'M4 7h3l1.5-2.5h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1zM8.5 13a3.5 3.5 0 1 0 7 0a3.5 3.5 0 1 0-7 0',
+        slice: 'M3 6h18M3 18h18M7 9.5h10v5H7z',
+        shoot: 'M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M8 12a4 4 0 1 0 8 0a4 4 0 1 0-8 0',
+        fullscreen: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
+        map: 'M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14',
+        close: 'M5 5l14 14M19 5L5 19'
+    };
+
+    function icon(name) {
+        var NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), path = document.createElementNS(NS, 'path');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('style', 'width:14px;height:14px;vertical-align:-2px;margin-inline-end:6px;fill:none;stroke:currentColor;' +
+            'stroke-width:2;stroke-linecap:round;stroke-linejoin:round;');
+        path.setAttribute('d', ICONS[name]);
+        svg.appendChild(path);
+        return svg;
+    }
+
+    function btnStyle(opts) {
+        return 'display:block;width:100%;box-sizing:border-box;margin:3px 0;padding:5px 8px;text-align:start;cursor:pointer;' +
+            'border:1px solid ' + (opts.active ? '#2e7d32' : '#888') + ';border-radius:4px;' +
+            'background:' + (opts.active ? '#c8e6c9' : '#f4f4f4') + ';color:#111;font-size:12px;' +
+            (opts.disabled ? 'opacity:.5;cursor:default;' : '');
+    }
+
+    // opts.icon = nome in ICONS. Il testo sta in b.__label: chi lo cambia dopo scrive li', non in b.textContent (toglierebbe l'icona).
     function btn(label, fn, opts) {
         opts = opts || {};
-        return h('button', {
-            type: 'button', onclick: fn, disabled: opts.disabled ? 'disabled' : null,
-            style: 'display:block;width:100%;margin:3px 0;padding:5px 8px;text-align:start;cursor:pointer;' +
-                'border:1px solid ' + (opts.active ? '#2e7d32' : '#888') + ';border-radius:4px;' +
-                'background:' + (opts.active ? '#c8e6c9' : '#f4f4f4') + ';color:#111;font-size:12px;' +
-                (opts.disabled ? 'opacity:.5;cursor:default;' : '')
-        }, label);
+        var text = h('span', {}, label);
+        var b = h('button', {type: 'button', onclick: fn, disabled: opts.disabled ? 'disabled' : null, style: btnStyle(opts)},
+            [opts.icon ? icon(opts.icon) : null, text]);
+        b.__label = text;
+        return b;
+    }
+
+    // La guida e' un link (si apre in un'altra finestra, come la Mappa 2D) con l'aspetto di un pulsante
+    function guideButton() {
+        return h('a', {href: DOC_URL, target: '_blank', rel: 'noopener',
+            style: btnStyle({}) + 'text-decoration:none;background:#e8f0fe;border-color:#5b7fb5;'}, [icon('guide'), T('Apri la guida')]);
     }
 
     function unitLabel() { return S.params.scale !== 1 ? 'm' : T('u.m. (non scalate)'); }
@@ -1207,7 +1259,7 @@
             h('div', {}, T('Verticale (ΔZ): {v}', {v: fmt(dv.z) + ' ' + u})),
             h('div', {style: 'margin-top:5px;'}, T('Distanza reale tra A e B (metri):')),
             S.ui.real,
-            btn(T('Imposta come scala'), applyScale)
+            btn(T('Imposta come scala'), applyScale, {icon: 'check'})
         ]);
     }
 
@@ -1267,32 +1319,33 @@
         if (S.collapsed) return;
 
         var sec = function (t) { return h('div', {style: 'font-weight:bold;margin:8px 0 2px;font-size:11px;text-transform:uppercase;color:#555;'}, T(t)); };
+        body.appendChild(guideButton());
         body.appendChild(sec('1. Distanza e scala'));
-        body.appendChild(btn(T(MODES.measure.label), function () { startMode('measure'); }, {active: S.mode === 'measure'}));
+        body.appendChild(btn(T(MODES.measure.label), function () { startMode('measure'); }, {active: S.mode === 'measure', icon: 'measure'}));
         var ro = readout(); if (ro) body.appendChild(ro);
 
         body.appendChild(sec('2. Asse Z (verticale)'));
-        body.appendChild(btn(T(MODES.upLine.label), function () { startMode('upLine'); }, {active: S.mode === 'upLine'}));
-        body.appendChild(btn(T(MODES.upPlane.label), function () { startMode('upPlane'); }, {active: S.mode === 'upPlane'}));
+        body.appendChild(btn(T(MODES.upLine.label), function () { startMode('upLine'); }, {active: S.mode === 'upLine', icon: 'vertical'}));
+        body.appendChild(btn(T(MODES.upPlane.label), function () { startMode('upPlane'); }, {active: S.mode === 'upPlane', icon: 'plane'}));
         if (S.mode === 'upPlane') {
-            body.appendChild(btn(T('Calcola dal piano ({n} punti)', {n: S.marks.length}), computePlane, {disabled: S.marks.length < 3}));
+            body.appendChild(btn(T('Calcola dal piano ({n} punti)', {n: S.marks.length}), computePlane, {disabled: S.marks.length < 3, icon: 'check'}));
         }
-        if (S.params.up) body.appendChild(btn(T('⇅ Inverti Z'), flipUp));
+        if (S.params.up) body.appendChild(btn(T('Inverti Z'), flipUp, {icon: 'flipZ'}));
 
         body.appendChild(sec('3. Piano XY e origine'));
-        body.appendChild(btn(T(MODES.xdir.label), function () { startMode('xdir'); }, {active: S.mode === 'xdir'}));
-        body.appendChild(btn(T('↔ X parallelo alla vista (destra)'), xParallelToViewer));
-        body.appendChild(btn(T('◉ X verso di me'), xToViewer));
-        body.appendChild(btn(T('⇄ Inverti X'), flipX));
-        body.appendChild(btn(T(MODES.origin.label), function () { startMode('origin'); }, {active: S.mode === 'origin'}));
+        body.appendChild(btn(T(MODES.xdir.label), function () { startMode('xdir'); }, {active: S.mode === 'xdir', icon: 'xdir'}));
+        body.appendChild(btn(T('X parallelo alla vista (destra)'), xParallelToViewer, {icon: 'xRight'}));
+        body.appendChild(btn(T('X verso di me'), xToViewer, {icon: 'xToward'}));
+        body.appendChild(btn(T('Inverti X'), flipX, {icon: 'flipX'}));
+        body.appendChild(btn(T(MODES.origin.label), function () { startMode('origin'); }, {active: S.mode === 'origin', icon: 'origin'}));
 
         body.appendChild(status());
         if (S.msg) body.appendChild(h('div', {style: 'font-size:11px;color:#8a4b00;margin:4px 0;'}, S.msg));
 
-        body.appendChild(btn(T('💾 Salva nel task'), save, {disabled: !S.canEdit}));
-        body.appendChild(btn(T('⇩ Esporta (LAZ, OBJ, matrice)'), startExport, {disabled: !S.canEdit || !S.saved || (S.exportState && S.exportState.state === 'running')}));
-        body.appendChild(btn(T('⌖ Inquadra modello'), function () { viewer.fitToScreen(); }));
-        body.appendChild(btn(T('↺ Ripristina originale'), resetAll));
+        body.appendChild(btn(T('Salva nel task'), save, {disabled: !S.canEdit, icon: 'save'}));
+        body.appendChild(btn(T('Esporta (LAZ, OBJ, matrice)'), startExport, {disabled: !S.canEdit || !S.saved || (S.exportState && S.exportState.state === 'running'), icon: 'export'}));
+        body.appendChild(btn(T('Inquadra modello'), function () { viewer.fitToScreen(); }, {icon: 'fit'}));
+        body.appendChild(btn(T('Ripristina originale'), resetAll, {icon: 'reset'}));
         if (!S.canEdit) body.appendChild(h('div', {style: 'font-size:11px;color:#a00;'}, T('Sola lettura: serve il permesso di modifica del progetto per salvare/esportare.')));
         var eb = exportBox(); if (eb) body.appendChild(eb);
         S.modules.forEach(function (mod) { if (mod.section) mod.section(body, sec); });
@@ -1308,7 +1361,7 @@
             body.appendChild(h('div', {style: 'font-size:11px;color:#8a4b00;'},
                 T('Scala del modello non impostata: metri e scale di stampa non sono reali.')));
         }
-        body.appendChild(btn(T('▣ Scatta l\'ortofoto'), startOrtho, {disabled: !S.canEdit || !S.saved || running}));
+        body.appendChild(btn(T('Scatta l\'ortofoto'), startOrtho, {disabled: !S.canEdit || !S.saved || running, icon: 'shoot'}));
         if (!S.saved) {
             body.appendChild(h('div', {style: 'font-size:11px;color:#555;'}, T('Serve una trasformazione salvata ("Salva nel task").')));
         }
@@ -1326,7 +1379,7 @@
             body.appendChild(h('div', {style: 'font-size:11px;margin-top:6px;padding:5px;background:#fff8e1;border:1px solid #e0c36a;border-radius:4px;'}, [
                 h('div', {style: 'font-weight:bold;'}, T('La Mappa 2D mostra una pianta generata qui')),
                 h('a', {href: map.map_url, target: '_blank', style: 'color:#0b57d0;'}, T('Apri la Mappa 2D')),
-                map.has_backup ? btn(T('↺ Ripristina ortofoto originale'), restoreMap, {disabled: !S.canEdit}) : null
+                map.has_backup ? btn(T('Ripristina ortofoto originale'), restoreMap, {disabled: !S.canEdit, icon: 'reset'}) : null
             ]));
         }
 
@@ -1365,7 +1418,7 @@
                         onclick: function () { openViewer(r); },
                         style: 'width:100%;margin:5px 0 3px;border:1px solid #bbb;background:#fff;cursor:zoom-in;'}));
                 }
-                kids.push(btn(T('💾 Apri a tutto schermo e salva…'), function () { openViewer(r); }));
+                kids.push(btn(T('Apri a tutto schermo e salva…'), function () { openViewer(r); }, {icon: 'fullscreen'}));
                 var links = [];
                 (r.files || []).forEach(function (f) {
                     if (/_preview\./.test(f.name)) return;
@@ -1374,8 +1427,8 @@
                 });
                 kids.push(h('div', {title: T('Scarica direttamente un formato')}, links));
                 if (r.view === 'top' && !onMap) {
-                    kids.push(btn(T('🗺 Mostra nella Mappa 2D (sostituisce l\'ortofoto)'), function () { publishToMap(r); },
-                        {disabled: !S.canEdit}));
+                    kids.push(btn(T('Mostra nella Mappa 2D (sostituisce l\'ortofoto)'), function () { publishToMap(r); },
+                        {disabled: !S.canEdit, icon: 'map'}));
                 }
                 kids.push(h('a', {href: '#', style: 'color:#a00;', onclick: function (e) { e.preventDefault(); deleteOrtho(r); }}, T('Elimina questo scatto')));
             }
@@ -1505,7 +1558,7 @@
         var clipStart = clipInput('clipStart'), clipEnd = clipInput('clipEnd');
         var clipRow = h('div', {style: 'display:flex;align-items:center;font-size:11px;margin:1px 0 3px 18px;'},
             ['start ', clipStart, h('span', {style: 'margin:0 4px;'}, 'end'), clipEnd]);
-        var sliceBtn = btn(T('✂ Anteprima della fetta'), function () { setSlice(!S.cam.slice); });
+        var sliceBtn = btn(T('Anteprima della fetta'), function () { setSlice(!S.cam.slice); }, {icon: 'slice'});
         ta(sliceBtn, 'title', 'Mostra nella scena solo quello che sta tra clip start e clip end e dentro il riquadro: la parte che comparirà nella foto, vista dalla camera');
         // cosa fotografare
         var source = h('select', {style: fieldStyle}, [
@@ -1548,8 +1601,8 @@
         ]).concat(rotRows.map(function (r) { return r.el; })).concat([
             h('div', {style: small + 'display:flex;align-items:center;'},
                 [tn('Inquadratura (m):'), ' ', wIn, h('span', {style: 'margin:0 3px;'}, '×'), hIn]),
-            btn(T('⛶ Adatta l\'inquadratura al modello'), fitCamera),
-            btn(T('⌖ Metti la camera dove sto guardando'), cameraFromView),
+            btn(T('Adatta l\'inquadratura al modello'), fitCamera, {icon: 'frame'}),
+            btn(T('Metti la camera dove sto guardando'), cameraFromView, {icon: 'camera'}),
             show.el, look.el, clip.el, clipRow, sliceBtn,
             h('div', {style: small}, tn('Uscita:')),
             mode, res, scaleRow, est, annot.el

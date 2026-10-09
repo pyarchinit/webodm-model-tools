@@ -253,13 +253,13 @@
             body.appendChild(custom);
 
             body.appendChild(h('div', {style: small + 'font-weight:bold;'}, T('Punto A (origine)')));
-            body.appendChild(btn(MODE_LABEL('georefA'), function () { ctx.startMode('georefA'); }, {active: S.mode === 'georefA'}));
+            body.appendChild(btn(MODE_LABEL('georefA'), function () { ctx.startMode('georefA'); }, {active: S.mode === 'georefA', icon: 'pin'}));
             body.appendChild(h('div', {style: small}, G.a ? T('A scelto sul modello ✔') : T('Senza scelta, A e\' l\'origine del modello (sezione 3).')));
             body.appendChild(h('div', {style: small}, T('Coordinate assolute di A: Est, Nord, quota (facoltativa)')));
             body.appendChild(aE); body.appendChild(aN); body.appendChild(aZ);
 
             body.appendChild(h('div', {style: small + 'font-weight:bold;margin-top:6px;'}, T('Punto B (orientamento, facoltativo)')));
-            body.appendChild(btn(MODE_LABEL('georefB'), function () { ctx.startMode('georefB'); }, {active: S.mode === 'georefB'}));
+            body.appendChild(btn(MODE_LABEL('georefB'), function () { ctx.startMode('georefB'); }, {active: S.mode === 'georefB', icon: 'pin'}));
             if (G.b) {
                 body.appendChild(h('div', {style: small}, T('B scelto sul modello ✔')));
                 body.appendChild(h('a', {href: '#', style: 'font-size:11px;color:#a00;', onclick: function (e) {
@@ -271,9 +271,9 @@
             body.appendChild(h('div', {style: small}, T('Coordinate assolute di B:')));
             body.appendChild(bE); body.appendChild(bN); body.appendChild(bZ);
 
-            body.appendChild(btn(G.busy ? T('… georeferenziazione in corso') : T('🌍 Georiferisci la nuvola'), georeference,
-                {disabled: !S.canEdit || G.busy}));
-            if (G.saved) body.appendChild(btn(T('↺ Rimuovi la georeferenziazione'), remove, {disabled: !S.canEdit}));
+            body.appendChild(btn(G.busy ? T('… georeferenziazione in corso') : T('Georiferisci la nuvola'), georeference,
+                {disabled: !S.canEdit || G.busy, icon: 'globe'}));
+            if (G.saved) body.appendChild(btn(T('Rimuovi la georeferenziazione'), remove, {disabled: !S.canEdit, icon: 'reset'}));
             if (!S.canEdit) body.appendChild(h('div', {style: 'font-size:11px;color:#a00;'}, T('Sola lettura: serve il permesso di modifica del progetto.')));
 
             var r = currentResult();

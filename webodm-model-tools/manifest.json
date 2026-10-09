@@ -2,7 +2,7 @@
   "name": "Scaling & Orientation Tool",
   "webodmMinVersion": "2.0.0",
   "description": "Nel visualizzatore 3D: misura la distanza tra due punti, imposta la scala in metri, definisci l'asse Z (verticale), la direzione X e l'origine su modelli senza georeferenziazione; georiferisci, esporta nuvola (LAZ), mesh OBJ e ortofoto da camera ortografica. / In the 3D viewer: measure, set the scale in metres, define the Z axis, the X direction and the origin of non-georeferenced models; georeference and export the point cloud (LAZ), OBJ mesh and orthographic-camera orthophotos.",
-  "version": "1.0.51",
+  "version": "1.0.52",
   "author": "Luca Mandolesi",
   "email": "mandoluca@gmail.com",
   "repository": "https://github.com/pyarchinit/webodm-model-tools",

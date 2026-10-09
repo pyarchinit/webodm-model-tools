@@ -7,7 +7,9 @@
 > - **Fai una copia dei task importanti** prima di usarlo.
 > - È stato provato sull'app WebODM per Windows con un solo utente; la revisione di sicurezza è stata fatta anch'essa con Claude Code, non da un revisore indipendente. Su server condivisi o esposti a Internet valuta tu se installarlo.
 
-Guida illustrata: pulsante **?** nell'intestazione del pannello (apre `public/documentazione.html`, inclusa nel plugin).
+**Requisito: prima va installato WebODM.** Il plugin da solo non fa nulla: scarica WebODM da <https://webodm.org/download/> e installalo, poi aggiungi il plugin.
+
+Guida illustrata: pulsante **Apri la guida** in cima al pannello, oppure il **?** nell'intestazione (apre `public/documentazione.html`, inclusa nel plugin).
 
 Nel visualizzatore 3D di un task completato compare il pannello **Scala & Orientamento**.
 Serve per modelli SENZA georeferenziazione (coordinate locali, scala e assi arbitrari).
