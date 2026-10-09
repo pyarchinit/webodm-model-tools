@@ -27,6 +27,8 @@ The interface is available in **Italian, English, German, French, Chinese, Japan
 
 ### Install
 
+**Requirement: WebODM must be installed first.** The plugin does nothing on its own: download WebODM from <https://webodm.org/download/> and install it, then add the plugin.
+
 `Administration → Plugins → Load Plugin (.zip)` with `webodm-model-tools.zip` from the [Releases](https://github.com/pyarchinit/webodm-model-tools/releases) (or a zip of the `webodm-model-tools` folder, which must be the first level of the archive). Up to v1.0.49 the plugin was called `scaling-tool`: disable and delete it first, then hard-reload the 3D page. No pip/npm dependencies, no build. It runs on the Windows desktop app and on the Docker image (some features use tools bundled only in the Windows app and fall back to built-in renderers otherwise).
 
 Full usage notes (in Italian): [`webodm-model-tools/README.md`](webodm-model-tools/README.md). An illustrated guide (in Italian) opens from the **?** button in the panel header.
@@ -65,6 +67,8 @@ I modelli fotogrammetrici costruiti senza punti di controllo hanno scala, assi e
 L'interfaccia è disponibile in **italiano, inglese, tedesco, francese, cinese, giapponese e arabo** e segue la lingua del browser (o il selettore nel pannello).
 
 ### Installazione
+
+**Requisito: prima va installato WebODM.** Il plugin da solo non fa nulla: scarica WebODM da <https://webodm.org/download/> e installalo, poi aggiungi il plugin.
 
 `Administration → Plugins → Load Plugin (.zip)` con `webodm-model-tools.zip` scaricato dalle [Release](https://github.com/pyarchinit/webodm-model-tools/releases) (oppure uno zip della cartella `webodm-model-tools`, che deve essere il primo livello dell'archivio). Fino alla v1.0.49 il plugin si chiamava `scaling-tool`: prima disabilitalo ed eliminalo, poi ricarica la pagina 3D con Ctrl+F5. Nessuna dipendenza pip/npm, nessuna build. Funziona sull'app desktop per Windows e sull'immagine Docker (alcune funzioni usano strumenti presenti solo nell'app Windows e altrimenti ripiegano su renderer interni).
 
