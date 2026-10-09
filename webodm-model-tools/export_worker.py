@@ -184,6 +184,14 @@ def find_tool(name):
                 env['PDAL_DRIVER_PATH'] = sbbin
                 env['GDAL_DATA'] = os.path.join(osgeo, 'data', 'gdal')
                 env['GDAL_DRIVER_PATH'] = os.path.join(osgeo, 'gdalplugins')
+                # Il processo di WebODM puo' avere PROJ_DATA/PROJ_LIB del proj.db di python39 (piu' vecchio, lo imposta osgeo
+                # appena importato) o di un'altra installazione (PostGIS): il PROJ di ODX lo rifiuta e PDAL non scrive
+                # nessun EPSG. win32env.bat usa quello di rasterio: sempre lo stesso, e le due variabili insieme.
+                for proj in (os.path.join(odx, 'venv', 'Lib', 'site-packages', 'rasterio', 'proj_data'),
+                             os.path.join(osgeo, 'data', 'proj')):
+                    if os.path.isfile(os.path.join(proj, 'proj.db')):
+                        env['PROJ_LIB'] = env['PROJ_DATA'] = proj
+                        break
                 return cand, env
         d = os.path.dirname(d)
     return None, None
