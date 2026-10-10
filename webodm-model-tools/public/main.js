@@ -133,6 +133,8 @@
         viewer: null,        // finestra a tutto schermo aperta
         exportKey: '', orthoKey: '',   // ultimo stato mostrato: i sondaggi ridisegnano solo se cambia
         openShots: {},       // scatti dell'elenco aperti (true) o richiusi (false) dall'utente
+        selShots: {},        // scatti spuntati per l'eliminazione multipla (nome -> true)
+        renaming: null,      // nome dello scatto di cui si sta modificando il titolo
         panelMoved: false,
         meshCount: 0,        // mesh texturizzate visibili nella scena
         msg: '',
@@ -863,6 +865,31 @@
         });
     }
 
+    // Elimina piu' scatti (i selezionati o tutti) dopo conferma
+    function deleteShots(names, all) {
+        var n = all ? ((S.orthoState && S.orthoState.results) || []).length : names.length;
+        if (!n) return;
+        var text = all ? T('Eliminare TUTTI gli scatti ({n})? L\'operazione non si puo\' annullare.', {n: n})
+                       : T('Eliminare i {n} scatti selezionati? L\'operazione non si puo\' annullare.', {n: n});
+        askConfirm(text, function () {
+            var q = all ? 'all=1' : 'names=' + encodeURIComponent(names.join(','));
+            api('DELETE', API + '/ortho?' + q).then(function () {
+                S.selShots = {};
+                pollOrtho();
+            }, function (e) {
+                S.msg = T('Eliminazione non riuscita: {e}', {e: TS(e)}); render();
+            });
+        });
+    }
+
+    // Salva il nuovo titolo di uno scatto (vuoto = di nuovo il nome automatico)
+    function renameShot(r, title) {
+        S.renaming = null;
+        api('PATCH', API + '/ortho', {name: r.name, title: title}).then(pollOrtho, function (e) {
+            S.msg = T('Rinomina non riuscita: {e}', {e: TS(e)}); render();
+        });
+    }
+
     // ---------------------------------------------------------------- anteprima e salvataggio degli scatti
     // [estensione, descrizione, tipo MIME] nell'ordine in cui vengono proposti
     var SAVE_FORMATS = [
@@ -1052,7 +1079,7 @@
             SAVE_FORMATS.filter(function (f) { return files[f[0]]; }).map(function (f) {
                 return h('option', {value: f[0]}, T(f[1]));
             }));
-        var info = '#' + (r.number || '?') + ' \u00B7 ' + orthoWhen(r) + ' \u00B7 ' + orthoTitle(r) + '  \u2014  ' + orthoDetails(r);
+        var info = '#' + (r.number || '?') + ' \u00B7 ' + orthoWhen(r) + ' \u00B7 ' + (r.title || orthoTitle(r)) + '  \u2014  ' + orthoDetails(r);
         var bar = h('div', {style: 'display:flex;align-items:center;flex-wrap:wrap;padding:8px 10px;background:#1e1e1e;' +
             'color:#eee;font:13px sans-serif;border-bottom:1px solid #555;'}, [
             tb('−', T('Riduci (rotella del mouse)'), function () { zoomCenter(v.k / 1.25); }, 'font-weight:bold;'),
@@ -1390,27 +1417,68 @@
         results.forEach(function (r, i) { r.number = i + 1; });
         results.reverse();
         if (results.length) {
+            var alive = {};
+            results.forEach(function (r) { alive[r.name] = true; });
+            Object.keys(S.selShots).forEach(function (k) { if (!alive[k]) delete S.selShots[k]; });
+            var picked = results.filter(function (r) { return S.selShots[r.name]; }).map(function (r) { return r.name; });
+            var linkStyle = 'color:#0b57d0;cursor:pointer;margin-right:10px;white-space:nowrap;';
+            var delStyle = 'color:#a00;cursor:pointer;margin-right:10px;white-space:nowrap;';
             body.appendChild(h('div', {style: 'font-weight:bold;font-size:11px;margin:8px 0 2px;color:#555;'},
                 T('SCATTI FATTI ({n}) — clic su una riga per aprirla', {n: results.length})));
+            body.appendChild(h('div', {style: 'font-size:11px;margin:0 0 3px;line-height:1.7;'}, [
+                h('a', {style: linkStyle, onclick: function () {
+                    var all = picked.length < results.length;
+                    S.selShots = {};
+                    if (all) results.forEach(function (r) { S.selShots[r.name] = true; });
+                    render();
+                }}, picked.length < results.length ? T('Seleziona tutti') : T('Deseleziona')),
+                picked.length ? h('a', {style: delStyle, onclick: function () { if (S.canEdit) deleteShots(picked, false); }},
+                    T('Elimina selezionati ({n})', {n: picked.length})) : null,
+                h('a', {style: delStyle, onclick: function () { if (S.canEdit) deleteShots(null, true); }}, T('Elimina tutti'))]));
         }
-        results.forEach(function (r, index) {
+        results.forEach(function (r) {
             var byExt = {};
             (r.files || []).forEach(function (f) { byExt[f.name.replace(/^.*?(_preview)?\.(\w+)$/, '$1.$2')] = f; });
             var preview = byExt['_preview.jpg'];
             var onMap = map.published === r.name;
-            var open = S.openShots[r.name] !== undefined ? S.openShots[r.name] : index === 0;
+            var open = !!S.openShots[r.name];                  // gli scatti stanno chiusi finche' non si aprono
             var toggleRow = function () { S.openShots[r.name] = !open; render(); };
 
+            var check = h('input', {type: 'checkbox', style: 'flex:none;margin:0 6px 0 0;cursor:pointer;'});
+            check.checked = !!S.selShots[r.name];
+            check.addEventListener('click', function (e) { e.stopPropagation(); });
+            check.addEventListener('change', function () {
+                if (check.checked) S.selShots[r.name] = true; else delete S.selShots[r.name];
+                render();
+            });
             var head = h('div', {title: open ? T('Richiudi') : T('Apri'), onclick: toggleRow,
                 style: 'display:flex;align-items:center;cursor:pointer;'}, [
+                check,
                 preview ? h('img', {src: preview.url + '?t=' + r.created, alt: '',
                     style: 'width:44px;height:44px;object-fit:contain;flex:none;margin-right:6px;border:1px solid #bbb;background:#fff;'}) : null,
                 h('div', {style: 'flex:1;min-width:0;'}, [
-                    h('div', {style: 'font-weight:bold;'}, '#' + r.number + ' · ' + orthoWhen(r) + ' · ' + orthoTitle(r)),
+                    h('div', {style: 'font-weight:bold;overflow-wrap:anywhere;'}, '#' + r.number + ' · ' + orthoWhen(r) + ' · ' + (r.title || orthoTitle(r))),
                     h('div', {style: 'color:#444;'}, orthoDetails(r))]),
                 h('span', {style: 'margin-left:4px;color:#555;'}, open ? '▾' : '▸')]);
 
             var kids = [head];
+            if (open && S.canEdit) {
+                if (S.renaming === r.name) {
+                    var inp = h('input', {type: 'text', maxlength: '80', style: 'flex:1;min-width:0;box-sizing:border-box;padding:3px;font-size:11px;'});
+                    inp.value = r.title || orthoTitle(r);
+                    inp.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter') { e.preventDefault(); renameShot(r, inp.value); }
+                        else if (e.key === 'Escape') { S.renaming = null; render(); }
+                    });
+                    kids.push(h('div', {style: 'display:flex;align-items:center;margin-top:4px;'}, [inp,
+                        h('a', {style: 'color:#0b57d0;cursor:pointer;margin-left:6px;', onclick: function () { renameShot(r, inp.value); }}, T('Salva')),
+                        h('a', {style: 'color:#555;cursor:pointer;margin-left:6px;', onclick: function () { S.renaming = null; render(); }}, T('Annulla'))]));
+                    setTimeout(function () { try { inp.focus(); inp.select(); } catch (e) { /* ignora */ } }, 0);
+                } else {
+                    kids.push(h('a', {style: 'color:#0b57d0;cursor:pointer;display:inline-block;margin-top:4px;',
+                        onclick: function () { S.renaming = r.name; render(); }}, T('Rinomina questo scatto')));
+                }
+            }
             if (onMap) kids.push(h('div', {style: 'color:#8a4b00;font-weight:bold;margin-top:3px;'}, T('Questa e\' l\'ortofoto mostrata nella Mappa 2D')));
             if (open) {
                 if (preview) {
@@ -1519,13 +1587,17 @@
                     [h('span', {style: 'width:12px;font-weight:bold;'}, 'XYZ'[i]), range, num]),
                 refresh: function (src) {
                     var v = S.cam[key][i];
+                    if (key === 'pos' && isFinite(v)) {        // un valore scritto a mano oltre lo slider lo allarga
+                        if (v < parseFloat(range.min)) range.min = Math.floor(v - 5);
+                        if (v > parseFloat(range.max)) range.max = Math.ceil(v + 5);
+                    }
                     if (src !== range) range.value = v;
                     if (src !== num && document.activeElement !== num) num.value = v;
                 }
             };
         };
         var posRows = [0, 1, 2].map(function (i) {
-            var a = axisNames[i], pad = Math.max(bsize[a], 1);
+            var a = axisNames[i], pad = Math.max(3 * Math.max(bsize.x, bsize.y, bsize.z), 10);
             return axisRow('pos', i, Math.floor(box.min[a] - pad), Math.ceil(box.max[a] + pad), '0.05');
         });
         var rotRows = [0, 1, 2].map(function (i) { return axisRow('rot', i, -180, 180, '0.5'); });
@@ -1782,6 +1854,11 @@
     // ---------------------------------------------------------------- avvio
     function init() {
         viewer = window.viewer;
+        try {   // una fetta rimasta da una sessione precedente (volume di clip evidenziato in rosso) non deve restare
+            var old = viewer.scene.volumes.filter(function (v) { return v.name === 'scaling-tool-fetta'; });
+            old.forEach(function (v) { viewer.scene.removeVolume(v); });
+            if (old.length && !viewer.scene.volumes.length) viewer.setClipTask(Potree.ClipTask.NONE);
+        } catch (e) { /* ignora */ }
         buildUI();
         startModules();
         installPicking();

@@ -318,7 +318,16 @@
         ["Mostra la camera nella scena 3D","Show the camera in the 3D scene","Kamera in der 3D-Szene anzeigen","Afficher la caméra dans la scène 3D","在 3D 场景中显示相机","3Dシーンにカメラを表示","إظهار الكاميرا في المشهد ثلاثي الأبعاد"],
         ["Guarda la scena dalla camera (vista ortografica)","View the scene from the camera (orthographic view)","Szene aus der Kamera betrachten (orthografische Ansicht)","Regarder la scène depuis la caméra (vue orthographique)","从相机观察场景（正交视图）","カメラからシーンを見る（正投影ビュー）","عرض المشهد من الكاميرا (عرض متعامد)"],
         ["Clip start / end (m davanti alla camera):","Clip start / end (m in front of the camera):","Clip start / end (m vor der Kamera):","Clip start / end (m devant la caméra) :","Clip start / end（相机前方，米）：","Clip start / end（カメラの前方、m）：","Clip start / end (م أمام الكاميرا):"],
-        ["Scala metrica e punti di georeferenziazione (per QGIS)","Metric scale and georeferencing points (for QGIS)","Metrischer Maßstab und Georeferenzierungspunkte (für QGIS)","Échelle métrique et points de géoréférencement (pour QGIS)","公制比例尺与地理配准点（用于 QGIS）","メートル法スケールと地理参照点（QGIS用）","المقياس المتري ونقاط الإسناد الجغرافي (لـ QGIS)"]
+        ["Scala metrica e punti di georeferenziazione (per QGIS)","Metric scale and georeferencing points (for QGIS)","Metrischer Maßstab und Georeferenzierungspunkte (für QGIS)","Échelle métrique et points de géoréférencement (pour QGIS)","公制比例尺与地理配准点（用于 QGIS）","メートル法スケールと地理参照点（QGIS用）","المقياس المتري ونقاط الإسناد الجغرافي (لـ QGIS)"],
+        ["Eliminare TUTTI gli scatti ({n})? L'operazione non si puo' annullare.","Delete ALL shots ({n})? This cannot be undone.","ALLE Aufnahmen ({n}) löschen? Das lässt sich nicht rückgängig machen.","Supprimer TOUTES les prises de vue ({n}) ? Cette opération est irréversible.","删除全部拍摄（{n} 个）？此操作无法撤销。","すべてのショット（{n} 件）を削除しますか？この操作は元に戻せません。","حذف جميع اللقطات ({n})؟ لا يمكن التراجع عن هذا الإجراء."],
+        ["Eliminare i {n} scatti selezionati? L'operazione non si puo' annullare.","Delete the {n} selected shots? This cannot be undone.","Die {n} ausgewählten Aufnahmen löschen? Das lässt sich nicht rückgängig machen.","Supprimer les {n} prises de vue sélectionnées ? Cette opération est irréversible.","删除所选的 {n} 个拍摄？此操作无法撤销。","選択した {n} 件のショットを削除しますか？この操作は元に戻せません。","حذف اللقطات المحددة ({n})؟ لا يمكن التراجع عن هذا الإجراء."],
+        ["Rinomina non riuscita: {e}","Rename failed: {e}","Umbenennen fehlgeschlagen: {e}","Échec du renommage : {e}","重命名失败：{e}","名前の変更に失敗しました: {e}","فشلت إعادة التسمية: {e}"],
+        ["Seleziona tutti","Select all","Alle auswählen","Tout sélectionner","全选","すべて選択","تحديد الكل"],
+        ["Deseleziona","Deselect","Auswahl aufheben","Désélectionner","取消选择","選択解除","إلغاء التحديد"],
+        ["Elimina selezionati ({n})","Delete selected ({n})","Ausgewählte löschen ({n})","Supprimer la sélection ({n})","删除所选 ({n})","選択を削除 ({n})","حذف المحدد ({n})"],
+        ["Elimina tutti","Delete all","Alle löschen","Tout supprimer","全部删除","すべて削除","حذف الكل"],
+        ["Salva","Save","Speichern","Enregistrer","保存","保存","حفظ"],
+        ["Rinomina questo scatto","Rename this shot","Diese Aufnahme umbenennen","Renommer cette prise de vue","重命名此次拍摄","このショットの名前を変更","إعادة تسمية هذه اللقطة"]
     ];                   // [chiave italiana, traduzione per ogni lingua di CODES...]
     var PATTERNS = [
         ["^Nuvola di punti: (\\d+) / (\\d+)$","Point cloud: {0} / {1}","Punktwolke: {0} / {1}","Nuage de points : {0} / {1}","点云：{0} / {1}","点群：{0} / {1}","سحابة النقاط: {0} / {1}"],

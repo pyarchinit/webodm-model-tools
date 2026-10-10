@@ -452,26 +452,53 @@ class OrthoView(TaskView):
     """POST {source, rotation, position, width, height, clip_start, clip_end, point_size,
     resolution_cm | scale + dpi}: scatta un'ortofoto della mesh o della nuvola di punti con la
     camera virtuale (vedi ortho_worker.py).
-    GET: stato + ortofoto esistenti. DELETE ?name=...: elimina un'ortofoto generata."""
+    GET: stato + ortofoto esistenti.
+    DELETE ?name=...: elimina un'ortofoto; ?names=a,b,c: quelle indicate; ?all=1: tutte.
+    PATCH {name, title}: rinomina uno scatto (titolo vuoto = torna al nome automatico)."""
 
     def delete(self, request, pk=None):
         task = self.get_and_check_task(request, pk)
         if not can_edit(request, task):
             return Response({'error': 'Permesso negato'}, status=status.HTTP_403_FORBIDDEN)
-        name = request.query_params.get('name')
-        meta = ortho_meta(task, name)
-        if meta is None:
-            return Response({'error': 'Ortofoto non trovata'}, status=status.HTTP_404_NOT_FOUND)
         folder = os.path.join(work_dir(task), 'ortho')
-        for fname in os.listdir(folder):
-            # solo i file di questa ortofoto: <nome>.<est> e <nome>_preview.<est>
-            stem = os.path.splitext(fname)[0]
-            if stem in (name, name + '_preview'):
+        if request.query_params.get('all'):
+            try:
+                names = [f[:-5] for f in os.listdir(folder) if f.endswith('.json')]
+            except OSError:
+                names = []
+        elif request.query_params.get('names'):
+            names = request.query_params.get('names').split(',')[:500]
+        else:
+            names = [request.query_params.get('name')]
+        names = [n for n in names if ortho_meta(task, n) is not None]
+        if not names and not request.query_params.get('all'):
+            return Response({'error': 'Ortofoto non trovata'}, status=status.HTTP_404_NOT_FOUND)
+        wanted = set(names) | set(n + '_preview' for n in names)
+        for fname in os.listdir(folder) if names else []:
+            # solo i file degli scatti indicati: <nome>.<est> e <nome>_preview.<est>
+            if os.path.splitext(fname)[0] in wanted:
                 try:
                     os.remove(os.path.join(folder, fname))
                 except OSError:
                     pass
         return Response({'ok': True})
+
+    def patch(self, request, pk=None):
+        task = self.get_and_check_task(request, pk)
+        if not can_edit(request, task):
+            return Response({'error': 'Permesso negato'}, status=status.HTTP_403_FORBIDDEN)
+        name = request.data.get('name')
+        meta = ortho_meta(task, name)
+        if meta is None:
+            return Response({'error': 'Ortofoto non trovata'}, status=status.HTTP_404_NOT_FOUND)
+        title = request.data.get('title')
+        title = re.sub(r'\s+', ' ', title).strip()[:80] if isinstance(title, str) else ''
+        if title:
+            meta['title'] = title
+        else:
+            meta.pop('title', None)
+        write_json(os.path.join(work_dir(task), 'ortho', name + '.json'), meta)
+        return Response({'ok': True, 'title': title})
 
     def get(self, request, pk=None):
         task = self.get_and_check_task(request, pk)
